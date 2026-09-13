@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+  <a class="btn" href="{{ url_for('new_server') }}">+ Add server</a>
+
+  {% for server in servers %}
+    <h2>{{ server.name }} <small style="color:#a1a1aa;">({{ server.host_type }} &mdash; {{ server.ip_address or "no IP set" }})</small></h2>
+    <p style="color:#a1a1aa; font-size:14px;">
+      {{ server.cpu or "" }}
+      {% if server.ram_gb %} &middot; {{ server.ram_gb }}GB RAM{% endif %}
+      {% if server.disk_gb %} &middot; {{ server.disk_gb }}GB disk{% endif %}
+    </p>
+    {% if server.notes %}<p><em>{{ server.notes }}</em></p>{% endif %}
+
+    <table>
+      <tr><th>Service</th><th>Port</th><th>Notes</th></tr>
+      {% for service in server.services %}
+        <tr><td>{{ service.name }}</td><td>{{ service.port or "-" }}</td><td>{{ service.notes or "" }}</td></tr>
+      {% else %}
+        <tr><td colspan="3"><em>No services logged yet</em></td></tr>
+      {% endfor %}
+    </table>
+    <a href="{{ url_for('new_service', server_id=server.id) }}">+ Add service to {{ server.name }}</a>
+    <hr>
+  {% else %}
+    <p>No servers yet &mdash; add your first one.</p>
+  {% endfor %}
+{% endblock %}

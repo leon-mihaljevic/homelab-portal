@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Add server</h2>
+  <form method="post">
+    <label>Name</label>
+    <input name="name" required>
+
+    <label>Type</label>
+    <select name="host_type">
+      <option value="physical">Physical</option>
+      <option value="vm">VM</option>
+    </select>
+
+    <label>IP address</label>
+    <input name="ip_address" placeholder="192.168.100.x">
+
+    <label>CPU</label>
+    <input name="cpu" placeholder="i5-8500">
+
+    <label>RAM (GB)</label>
+    <input name="ram_gb" type="number">
+
+    <label>Disk (GB)</label>
+    <input name="disk_gb" type="number">
+
+    <label>Notes</label>
+    <textarea name="notes" rows="3"></textarea>
+
+    <button class="btn" type="submit">Save</button>
+  </form>
+{% endblock %}

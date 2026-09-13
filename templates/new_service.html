@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Add service to {{ server.name }}</h2>
+  <form method="post">
+    <label>Name</label>
+    <input name="name" placeholder="Jellyfin" required>
+
+    <label>Port</label>
+    <input name="port" type="number" placeholder="8096">
+
+    <label>Notes</label>
+    <textarea name="notes" rows="3"></textarea>
+
+    <button class="btn" type="submit">Save</button>
+  </form>
+{% endblock %}

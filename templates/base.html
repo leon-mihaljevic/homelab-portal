@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homelab Portal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#0e0e0e; color:#f4f4f5;
+           max-width:800px; margin:40px auto; padding:0 20px; line-height:1.5; }
+    a { color:#a78bfa; }
+    h1 { letter-spacing:-0.02em; }
+    table { width:100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { text-align:left; padding:8px; border-bottom:1px solid #27272a; font-size:14px; }
+    .btn { display:inline-block; padding:8px 14px; background:#8b5cf6; color:white;
+           border-radius:6px; text-decoration:none; margin-bottom:20px; border:none;
+           font-size:14px; cursor:pointer; }
+    input, textarea, select { width:100%; padding:8px; margin-bottom:10px;
+           background:#121212; color:#f4f4f5; border:1px solid #27272a; border-radius:4px; }
+    label { font-size: 13px; color:#a1a1aa; }
+    hr { border-color:#27272a; margin: 30px 0; }
+  </style>
+</head>
+<body>
+  <h1>Homelab Portal</h1>
+  {% block content %}{% endblock %}
+</body>
+</html>
