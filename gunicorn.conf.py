@@ -9,6 +9,10 @@ def post_fork(server, worker):
     condition two workers hit trying to create tables simultaneously.
     The tradeoff: forked workers inherit the master's already-open
     SQLAlchemy connection, which isn't safe to share across processes.
-    Disposing it here forces each worker to open its own fresh one."""
-    from app import db
-    db.engine.dispose()
+    Disposing it here forces each worker to open its own fresh one.
+    db.engine requires an active Flask application context to resolve
+    which app it belongs to - post_fork runs outside of one by default,
+    so we push one explicitly before touching db.engine at all."""
+    from app import app, db
+    with app.app_context():
+        db.engine.dispose()
