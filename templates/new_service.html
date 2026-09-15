@@ -1,16 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Add service to {{ server.name }}</h2>
-  <form method="post">
-    <label>Name</label>
-    <input name="name" placeholder="Jellyfin" required>
+  <p class="term-line">~ $ {{ "edit" if service else "new" }} service</p>
+  <h1>{{ "Edit " ~ service.name if service else "Add service to " ~ server.name }}</h1>
 
-    <label>Port</label>
-    <input name="port" type="number" placeholder="8096">
+  <div class="form-card">
+    <form class="stack" method="post">
+      <label>Name</label>
+      <input name="name" placeholder="Jellyfin" required value="{{ service.name if service else '' }}">
 
-    <label>Notes</label>
-    <textarea name="notes" rows="3"></textarea>
+      <label>Port</label>
+      <input name="port" type="number" placeholder="8096" value="{{ service.port if service else '' }}">
 
-    <button class="btn" type="submit">Save</button>
-  </form>
+      <label>Notes</label>
+      <textarea name="notes" rows="3">{{ service.notes if service else '' }}</textarea>
+
+      <div class="card-actions" style="margin-top:24px;">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-ghost" href="{{ url_for('index') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
 {% endblock %}

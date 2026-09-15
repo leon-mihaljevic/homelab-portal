@@ -16,6 +16,15 @@ services:
       - "5000:5000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      PROXMOX_HOST: ${PROXMOX_HOST}
+      PROXMOX_NODE: ${PROXMOX_NODE}
+      PROXMOX_TOKEN_ID: ${PROXMOX_TOKEN_ID}
+      PROXMOX_TOKEN_SECRET: ${PROXMOX_TOKEN_SECRET}
+      DOCKER_HOST_IP: ${DOCKER_HOST_IP}
+      SSH_AGENT_USER: ${SSH_AGENT_USER}
+    volumes:
+      - ./ssh_keys/homelab_portal_key:/app/ssh_keys/homelab_portal_key:ro
     depends_on:
       - db
 

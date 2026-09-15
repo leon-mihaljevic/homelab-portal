@@ -1,31 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Add server</h2>
-  <form method="post">
-    <label>Name</label>
-    <input name="name" required>
+  <p class="term-line">~ $ {{ "edit" if server else "new" }} server</p>
+  <h1>{{ "Edit " ~ server.name if server else "Add server" }}</h1>
 
-    <label>Type</label>
-    <select name="host_type">
-      <option value="physical">Physical</option>
-      <option value="vm">VM</option>
-    </select>
+  <div class="form-card">
+    <form class="stack" method="post">
+      <label>Name</label>
+      <input name="name" required value="{{ server.name if server else '' }}">
 
-    <label>IP address</label>
-    <input name="ip_address" placeholder="192.168.100.x">
+      <label>Type</label>
+      <select name="host_type">
+        <option value="physical" {% if server and server.host_type == "physical" %}selected{% endif %}>Physical</option>
+        <option value="vm" {% if server and server.host_type == "vm" %}selected{% endif %}>VM</option>
+      </select>
 
-    <label>CPU</label>
-    <input name="cpu" placeholder="i5-8500">
+      <label>IP address</label>
+      <input name="ip_address" placeholder="192.168.100.x" value="{{ server.ip_address if server else '' }}">
 
-    <label>RAM (GB)</label>
-    <input name="ram_gb" type="number">
+      <label>CPU</label>
+      <input name="cpu" placeholder="i5-8500" value="{{ server.cpu if server else '' }}">
 
-    <label>Disk (GB)</label>
-    <input name="disk_gb" type="number">
+      <label>RAM (GB)</label>
+      <input name="ram_gb" type="number" value="{{ server.ram_gb if server else '' }}">
 
-    <label>Notes</label>
-    <textarea name="notes" rows="3"></textarea>
+      <label>Disk (GB)</label>
+      <input name="disk_gb" type="number" value="{{ server.disk_gb if server else '' }}">
 
-    <button class="btn" type="submit">Save</button>
-  </form>
+      <label>Proxmox VMID <span style="font-weight:400;">(optional &mdash; enables real live status from Proxmox instead of a network guess)</span></label>
+      <input name="proxmox_vmid" type="number" placeholder="e.g. 101" value="{{ server.proxmox_vmid if server else '' }}">
+
+      <label>Notes</label>
+      <textarea name="notes" rows="3">{{ server.notes if server else '' }}</textarea>
+
+      <div class="card-actions" style="margin-top:24px;">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-ghost" href="{{ url_for('index') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
 {% endblock %}

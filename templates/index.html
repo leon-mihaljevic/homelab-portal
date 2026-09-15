@@ -1,27 +1,111 @@
 {% extends "base.html" %}
 {% block content %}
-  <a class="btn" href="{{ url_for('new_server') }}">+ Add server</a>
+  <p class="term-line">~ $ cat inventory.json</p>
+  <h1>Infrastructure Inventory</h1>
+  <p class="subtitle">Every server, VM and service currently running in the homelab.</p>
 
-  {% for server in servers %}
-    <h2>{{ server.name }} <small style="color:#a1a1aa;">({{ server.host_type }} &mdash; {{ server.ip_address or "no IP set" }})</small></h2>
-    <p style="color:#a1a1aa; font-size:14px;">
-      {{ server.cpu or "" }}
-      {% if server.ram_gb %} &middot; {{ server.ram_gb }}GB RAM{% endif %}
-      {% if server.disk_gb %} &middot; {{ server.disk_gb }}GB disk{% endif %}
-    </p>
-    {% if server.notes %}<p><em>{{ server.notes }}</em></p>{% endif %}
+  <div class="toolbar">
+    <a class="btn btn-primary" href="{{ url_for('new_server') }}">+ Add server</a>
+  </div>
 
-    <table>
-      <tr><th>Service</th><th>Port</th><th>Notes</th></tr>
-      {% for service in server.services %}
-        <tr><td>{{ service.name }}</td><td>{{ service.port or "-" }}</td><td>{{ service.notes or "" }}</td></tr>
-      {% else %}
-        <tr><td colspan="3"><em>No services logged yet</em></td></tr>
+  {% if servers %}
+    <div class="server-grid">
+      {% for server in servers %}
+        <div class="server-card">
+          <div class="server-card-head">
+            <h2>{{ server.name }}</h2>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="badge">{{ server.host_type }}</span>
+              {% if server.is_live %}
+                <span class="status-badge status-live"><span class="dot"></span>Live</span>
+              {% else %}
+                <span class="status-badge status-offline"><span class="dot"></span>Offline</span>
+              {% endif %}
+            </div>
+          </div>
+          {% if server.uptime_display %}
+            <p style="color:var(--muted); font-size:12px; margin-bottom:6px;">{{ server.uptime_display }} &middot; via Proxmox</p>
+          {% endif %}
+
+          {% if server.docker_containers is not none %}
+            <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+              <p style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Live Docker containers</p>
+              <table>
+                <tr><th>Container</th><th>Status</th><th>Ports</th></tr>
+                {% for c in server.docker_containers %}
+                  <tr>
+                    <td>
+                      <span class="status-badge {{ 'status-live' if c.status.startswith('Up') else 'status-offline' }}" style="padding:3px 8px; margin-right:6px;"><span class="dot"></span></span>
+                      {{ c.name }}
+                    </td>
+                    <td>{{ c.status }}</td>
+                    <td>{{ c.ports or "-" }}</td>
+                  </tr>
+                {% else %}
+                  <tr><td class="empty" colspan="3">No containers found.</td></tr>
+                {% endfor %}
+              </table>
+            </div>
+          {% endif %}
+
+          {% if server.disk_lines %}
+            <div style="margin-top:16px;">
+              <p style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Disk usage</p>
+              {% for disk in server.disk_lines %}
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--muted);">
+                  <span>{{ disk.target }}</span>
+                  <span>{{ disk.used }} / {{ disk.size }} ({{ disk.pcent }})</span>
+                </div>
+                <div class="disk-bar-wrap">
+                  <div class="disk-bar-fill" style="width: {{ disk.pcent }};"></div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <p class="server-meta">
+            {{ server.ip_address or "No IP set" }}
+            {% if server.cpu %} &middot; {{ server.cpu }}{% endif %}
+            {% if server.ram_gb %} &middot; {{ server.ram_gb }}GB RAM{% endif %}
+            {% if server.disk_gb %} &middot; {{ server.disk_gb }}GB disk{% endif %}
+          </p>
+          {% if server.notes %}
+            <p style="color:var(--muted); font-size:14px; margin-bottom:16px;"><em>{{ server.notes }}</em></p>
+          {% endif %}
+
+          <table>
+            <tr><th>Service</th><th>Port</th><th>Notes</th><th></th></tr>
+            {% for service in server.services %}
+              <tr>
+                <td>{{ service.name }}</td>
+                <td>{{ service.port or "-" }}</td>
+                <td>{{ service.notes or "" }}</td>
+                <td>
+                  <div class="row-actions">
+                    <a class="btn btn-ghost btn-sm" href="{{ url_for('edit_service', service_id=service.id) }}">Edit</a>
+                    <form method="post" action="{{ url_for('delete_service', service_id=service.id) }}" onsubmit="return confirm('Delete this service?');">
+                      <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td class="empty" colspan="4">No services logged yet</td></tr>
+            {% endfor %}
+          </table>
+
+          <div class="card-actions">
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('new_service', server_id=server.id) }}">+ Add service</a>
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('edit_server', server_id=server.id) }}">Edit server</a>
+            <form method="post" action="{{ url_for('delete_server', server_id=server.id) }}" onsubmit="return confirm('Delete {{ server.name }} and all its services?');">
+              <button class="btn btn-danger btn-sm" type="submit">Delete server</button>
+            </form>
+          </div>
+        </div>
       {% endfor %}
-    </table>
-    <a href="{{ url_for('new_service', server_id=server.id) }}">+ Add service to {{ server.name }}</a>
-    <hr>
+    </div>
   {% else %}
-    <p>No servers yet &mdash; add your first one.</p>
-  {% endfor %}
+    <div class="empty-state">
+      <p>No servers yet &mdash; add your first one.</p>
+    </div>
+  {% endif %}
 {% endblock %}

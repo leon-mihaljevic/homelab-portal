@@ -1,0 +1,3 @@
+services:
+  web:
+    image: dexthida/homelab-portal:latest
