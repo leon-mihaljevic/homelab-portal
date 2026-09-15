@@ -74,7 +74,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'docker01-deploy-key', keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'docker-server-deploy-key', keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no -i "$DEPLOY_KEY" "$DEPLOY_USER"@${DEPLOY_HOST} redeploy
                     '''
