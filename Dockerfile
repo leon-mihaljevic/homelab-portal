@@ -21,4 +21,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/')" || exit 1
 
 # gunicorn, not Flask's dev server - a real WSGI server, no debug mode.
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "app:app"]
+# Config (including the preload_app fix for a multi-worker startup race)
+# lives in gunicorn.conf.py.
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]
