@@ -23,6 +23,8 @@ services:
       PROXMOX_TOKEN_SECRET: ${PROXMOX_TOKEN_SECRET}
       DOCKER_HOST_IP: ${DOCKER_HOST_IP}
       SSH_AGENT_USER: ${SSH_AGENT_USER}
+      PORTAL_USERNAME: ${PORTAL_USERNAME}
+      PORTAL_PASSWORD_HASH: ${PORTAL_PASSWORD_HASH}
     volumes:
       - ./ssh_keys/homelab_portal_key:/app/ssh_keys/homelab_portal_key:ro
     depends_on:

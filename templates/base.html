@@ -176,6 +176,9 @@
 <header class="site-header">
   <div class="container">
     <a href="{{ url_for('index') }}" class="brand">Homelab<span>Portal</span></a>
+    {% if session.logged_in %}
+      <a href="{{ url_for('logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+    {% endif %}
   </div>
 </header>
 <main>

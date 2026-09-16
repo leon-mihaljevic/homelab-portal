@@ -1,11 +1,13 @@
 import os
 import socket
 from datetime import datetime
+from functools import wraps
 
 import paramiko
 import requests
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash
 from dotenv import load_dotenv
 
 # Proxmox uses a self-signed cert on your LAN, so we skip verification below.
@@ -29,6 +31,44 @@ PROXMOX_TOKEN_SECRET = os.environ.get("PROXMOX_TOKEN_SECRET")
 DOCKER_HOST_IP = os.environ.get("DOCKER_HOST_IP")
 SSH_AGENT_USER = os.environ.get("SSH_AGENT_USER")
 SSH_KEY_PATH = os.environ.get("SSH_KEY_PATH", "/app/ssh_keys/homelab_portal_key")
+
+PORTAL_USERNAME = os.environ.get("PORTAL_USERNAME")
+PORTAL_PASSWORD_HASH = os.environ.get("PORTAL_PASSWORD_HASH")
+
+
+def login_required(view):
+    """Wrap a route so it redirects to /login instead of rendering
+    anything, unless the current session is authenticated. Applied to
+    every route below except /login itself."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        valid = (
+            username == PORTAL_USERNAME
+            and PORTAL_PASSWORD_HASH
+            and check_password_hash(PORTAL_PASSWORD_HASH, password)
+        )
+        if valid:
+            session["logged_in"] = True
+            return redirect(url_for("index"))
+        flash("Invalid username or password.")
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("logged_in", None)
+    return redirect(url_for("login"))
 
 
 class Server(db.Model):
@@ -158,6 +198,7 @@ def get_disk_usage(host_ip):
 
 
 @app.route("/")
+@login_required
 def index():
     servers = Server.query.order_by(Server.name).all()
     for server in servers:
@@ -183,6 +224,7 @@ def index():
 # --- Servers ---------------------------------------------------------------
 
 @app.route("/servers/new", methods=["GET", "POST"])
+@login_required
 def new_server():
     if request.method == "POST":
         server = Server(
@@ -203,6 +245,7 @@ def new_server():
 
 
 @app.route("/servers/<int:server_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit_server(server_id):
     server = Server.query.get_or_404(server_id)
     if request.method == "POST":
@@ -221,6 +264,7 @@ def edit_server(server_id):
 
 
 @app.route("/servers/<int:server_id>/delete", methods=["POST"])
+@login_required
 def delete_server(server_id):
     server = Server.query.get_or_404(server_id)
     name = server.name
@@ -233,6 +277,7 @@ def delete_server(server_id):
 # --- Services ----------------------------------------------------------------
 
 @app.route("/servers/<int:server_id>/services/new", methods=["GET", "POST"])
+@login_required
 def new_service(server_id):
     server = Server.query.get_or_404(server_id)
     if request.method == "POST":
@@ -250,6 +295,7 @@ def new_service(server_id):
 
 
 @app.route("/services/<int:service_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit_service(service_id):
     service = Service.query.get_or_404(service_id)
     if request.method == "POST":
@@ -263,6 +309,7 @@ def edit_service(service_id):
 
 
 @app.route("/services/<int:service_id>/delete", methods=["POST"])
+@login_required
 def delete_service(service_id):
     service = Service.query.get_or_404(service_id)
     name = service.name

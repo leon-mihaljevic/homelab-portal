@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+  <p class="term-line">~ $ whoami</p>
+  <h1>Log in</h1>
+
+  <div class="form-card" style="max-width:420px;">
+    <form class="stack" method="post">
+      <label>Username</label>
+      <input name="username" required autofocus>
+
+      <label>Password</label>
+      <input name="password" type="password" required>
+
+      <div class="card-actions" style="margin-top:24px;">
+        <button class="btn btn-primary" type="submit">Log in</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}
