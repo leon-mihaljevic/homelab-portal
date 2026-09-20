@@ -4,7 +4,9 @@ pipeline {
     environment {
         IMAGE_NAME = "dexthida/homelab-portal"
         IMAGE_TAG  = "${env.BUILD_NUMBER}"
-        DEPLOY_HOST = "192.168.100.60"
+        DEPLOY_HOST = "100.81.105.85"
+        EC2_INSTANCE_ID = "i-069323efbad2c1770"
+        AWS_DEFAULT_REGION = "eu-central-1"
     }
 
     stages {
@@ -74,8 +76,37 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'docker-server-deploy-key', keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
+                withCredentials([
+                    usernamePassword(credentialsId: 'aws-ec2-starter-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY'),
+                    sshUserPrivateKey(credentialsId: 'ec2-deploy-key', keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')
+                ]) {
                     sh '''
+                        STATE=$(aws ec2 describe-instances --instance-ids ${EC2_INSTANCE_ID} --query "Reservations[0].Instances[0].State.Name" --output text)
+                        echo "Current EC2 state: $STATE"
+
+                        if [ "$STATE" != "running" ]; then
+                            echo "Instance is stopped - starting it..."
+                            aws ec2 start-instances --instance-ids ${EC2_INSTANCE_ID}
+                            aws ec2 wait instance-running --instance-ids ${EC2_INSTANCE_ID}
+                            echo "AWS reports the instance as running - now waiting for SSH to actually respond."
+                        fi
+
+                        READY=0
+                        for i in $(seq 1 20); do
+                            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i "$DEPLOY_KEY" "$DEPLOY_USER"@${DEPLOY_HOST} "echo ready" 2>/dev/null; then
+                                READY=1
+                                echo "SSH is reachable."
+                                break
+                            fi
+                            echo "Not ready yet, waiting..."
+                            sleep 5
+                        done
+
+                        if [ "$READY" != "1" ]; then
+                            echo "EC2 instance never became SSH-reachable within the timeout."
+                            exit 1
+                        fi
+
                         ssh -o StrictHostKeyChecking=no -i "$DEPLOY_KEY" "$DEPLOY_USER"@${DEPLOY_HOST} redeploy
                     '''
                 }
