@@ -93,7 +93,7 @@ pipeline {
 
                         READY=0
                         for i in $(seq 1 20); do
-                            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i "$DEPLOY_KEY" "$DEPLOY_USER"@${DEPLOY_HOST} "echo ready" 2>/dev/null; then
+                            if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$DEPLOY_KEY" "$DEPLOY_USER"@${DEPLOY_HOST} "echo ready" 2>/dev/null; then
                                 READY=1
                                 echo "SSH is reachable."
                                 break
