@@ -91,16 +91,17 @@ pipeline {
                             echo "AWS reports the instance as running - now waiting for SSH to actually respond."
                         fi
 
-                        READY=0
-                        for i in $(seq 1 20); do
-                            if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i "$DEPLOY_KEY" "$DEPLOY_USER"@${DEPLOY_HOST} "echo ready" 2>/dev/null; then
-                                READY=1
-                                echo "SSH is reachable."
-                                break
-                            fi
-                            echo "Not ready yet, waiting..."
-                            sleep 5
-                        done
+                        echo "Testing the exact SSH connection Jenkins is using..."
+
+			ssh -vvv \
+    				-o BatchMode=yes \
+    				-o StrictHostKeyChecking=no \
+    				-o ConnectTimeout=10 \
+    				-i "$DEPLOY_KEY" \
+    				"$DEPLOY_USER"@${DEPLOY_HOST} "echo ready"
+
+			echo "SSH test exit code: $?"
+			exit 1
 
                         if [ "$READY" != "1" ]; then
                             echo "EC2 instance never became SSH-reachable within the timeout."
